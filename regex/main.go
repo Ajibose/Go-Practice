@@ -10,9 +10,9 @@ func main() {
 	GOAL: Match http://example.com or https://example.com, but do NOT capture the http/https part.
 	INPUT: https://example.com
 	Your FindStringSubmatch should return only one element (the whole match). If it returns two, you used the wrong group type. Look up (?:...). */
-	re := regexp.MustCompile(`^#([a-fA-F0-9]{3}|[a-fA-F0-9]{6})$`)
+	re := regexp.MustCompile(`^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$`)
 
-	inputs := []string{"#FF00AA", "#000000", "#abcdef", "#abc", "#", "FF00AA", "#FFF", "#GGGGGG", "#FF00AAA"}
+	inputs := []string{"a@b.co", "ibrahim@example.ng", "name+tag@host.com", "a@b", "@b.co", "a@.co", "a @b.co"}
 	for _, in := range inputs {
 		fmt.Printf("%-30q -> %v\n", in, re.MatchString(in))
 	}
