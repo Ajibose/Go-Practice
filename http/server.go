@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"math/big"
 	"net/http"
@@ -12,8 +13,8 @@ import (
 )
 
 type Data struct {
-	id        string
-	createdAt string
+	ID        string
+	CreatedAt string
 	Body      string
 }
 
@@ -50,6 +51,17 @@ func main() {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(201)
 		fmt.Fprintf(w, strconv.Itoa(int(id)))
+	})
+
+	mux.HandleFunc("GET /paste", func(w http.ResponseWriter, r *http.Request) {
+		tmpl, err := template.ParseFiles("./paste.html")
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Error parsing templtate", 400)
+			return
+		}
+
+		tmpl.Execute(w, ids)
 	})
 
 	mux.HandleFunc("GET /paste/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +103,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		resp := map[string]string{
-			"created":        d.createdAt,
+			"created":        d.CreatedAt,
 			"Content length": strconv.Itoa(len(d.Body)),
 		}
 
