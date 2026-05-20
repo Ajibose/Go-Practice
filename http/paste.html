@@ -1,21 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+{{define "content"}}    
+{{if gt (len .) 0}}
+<ul>
+    {{range $id, $paste := .}}
+    <li>{{$id}}: {{$paste.Body}}</li>
+    {{end}}
+</ul>
+{{else}}
+    <p>No paste yet</p>
+{{end}}
     
-        {{if .}}
-        <ul>
-            {{range $id, $paste := .}}
-            <li>{{$id}}: {{$paste.Body}} -> created at {{$paste.CreatedAt}}</li>
-            {{end}}
-        </ul>
-        {{else}}
-            <p>No paste yet</p>
-        {{end}}
-    
-</body>
-</html>
+{{end}}

@@ -54,14 +54,14 @@ func main() {
 	})
 
 	mux.HandleFunc("GET /paste", func(w http.ResponseWriter, r *http.Request) {
-		tmpl, err := template.ParseFiles("./paste.html")
+		tmpl, err := template.ParseFiles("./layout.html", "./paste.html")
 		if err != nil {
 			fmt.Println(err)
-			http.Error(w, "Error parsing templtate", 400)
+			http.Error(w, "Error parsing templtate", 500)
 			return
 		}
 
-		tmpl.Execute(w, ids)
+		tmpl.ExecuteTemplate(w, "layout", ids)
 	})
 
 	mux.HandleFunc("GET /paste/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -81,13 +81,21 @@ func main() {
 
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
-			http.Error(w, "Method not allowed", 405)
+			http.Error(w, "Page not found", 404)
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/plain")
+		tmpl, err := template.ParseFiles("./layout.html", "./home.html")
+		if err != nil {
+			http.Error(w, "Error parsing template", 500)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(200)
-		fmt.Fprintf(w, "welcome to pastebin. POST to /paste to create one")
+
+		tmpl.ExecuteTemplate(w, "layout", "")
+
 	})
 
 	mux.HandleFunc("GET /paste/{id}/info", func(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +116,28 @@ func main() {
 		}
 
 		json.NewEncoder(w).Encode(resp)
+	})
+
+	mux.HandleFunc("GET /paste/{id}/view", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+
+		d, exist := ids[id]
+
+		if !exist {
+			http.NotFound(w, r)
+			return
+		}
+
+		tmpl, err := template.ParseFiles("./layout.html", "./paste_detail.html")
+		if err != nil {
+			http.Error(w, "Error parsing template", 500)
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println(d)
+		tmpl.ExecuteTemplate(w, "layout", d)
+
 	})
 
 	http.ListenAndServe(
