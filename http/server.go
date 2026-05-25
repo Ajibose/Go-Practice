@@ -18,10 +18,19 @@ type Data struct {
 	Body      string
 }
 
+type User struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+var users []User
 var ids = make(map[string]Data)
 
 func main() {
 	mux := http.NewServeMux()
+
+	fs := http.FileServer(http.Dir("./static"))
+	mux.Handle("/static/", http.StripPrefix("/static", fs))
 
 	mux.HandleFunc("POST /paste", func(w http.ResponseWriter, r *http.Request) {
 
@@ -79,15 +88,15 @@ func main() {
 		fmt.Fprintf(w, d.Body)
 	})
 
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
-			http.Error(w, "Page not found", 404)
+			http.Error(w, "Page not found", http.StatusNotFound)
 			return
 		}
 
 		tmpl, err := template.ParseFiles("./layout.html", "./home.html")
 		if err != nil {
-			http.Error(w, "Error parsing template", 500)
+			http.Error(w, "Error parsing template", http.StatusInternalServerError)
 			return
 		}
 
@@ -130,7 +139,7 @@ func main() {
 
 		tmpl, err := template.ParseFiles("./layout.html", "./paste_detail.html")
 		if err != nil {
-			http.Error(w, "Error parsing template", 500)
+			http.Error(w, "Error parsing template", http.StatusInternalServerError)
 			fmt.Println(err)
 			return
 		}
@@ -140,9 +149,33 @@ func main() {
 
 	})
 
-	http.ListenAndServe(
-		":8080",
-		mux,
-	)
+	mux.HandleFunc("POST /users", func(w http.ResponseWriter, r *http.Request) {
+		var u User
+
+		err := json.NewDecoder(r.Body).Decode(&u)
+		if err != nil {
+			http.Error(w, "Bad json provided", http.StatusBadRequest)
+			return
+		}
+
+		if u.Name == "" {
+			http.Error(w, "Name not allowed empty", http.StatusBadRequest)
+			return
+		}
+
+		if u.Email == "" {
+			http.Error(w, "Name not allowed empty", http.StatusBadRequest)
+			return
+		}
+
+		users = append(users, u)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(201)
+
+		json.NewEncoder(w).Encode(u)
+	})
+
+	http.ListenAndServe(":8080", logger(mux))
 
 }
