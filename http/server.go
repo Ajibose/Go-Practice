@@ -1,180 +1,29 @@
 package main
 
 import (
-	"crypto/rand"
-	"encoding/json"
-	"fmt"
-	"html/template"
-	"io"
-	"math/big"
 	"net/http"
-	"strconv"
-	"time"
+	"practice/http/handler"
+	"practice/http/model"
 )
-
-type Data struct {
-	ID        string
-	CreatedAt string
-	Body      string
-}
-
-type User struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
-var users []User
-var ids = make(map[string]Data)
 
 func main() {
 	mux := http.NewServeMux()
+	store := &model.Storage{Users: []model.User{}, Ids: make(map[string]model.Data)}
 
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static", fs))
 
-	mux.HandleFunc("POST /paste", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("POST /paste", handler.CreatePaste(store))
+	mux.HandleFunc("GET /paste", handler.GetAllPaste(store))
+	mux.HandleFunc("GET /paste/{id}", handler.GetPaste(store))
 
-		randomNum, _ := rand.Int(rand.Reader, big.NewInt(9000))
-		id := randomNum.Int64() + 1000
-		idString := strconv.Itoa(int(id))
+	mux.HandleFunc("/", handler.Home())
 
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			fmt.Println("Error reading body", err)
-			http.Error(w, "failed to read body", http.StatusInternalServerError)
-			return
-		}
+	mux.HandleFunc("GET /paste/{id}/info", handler.GetPasteInfo(store))
 
-		d := Data{
-			idString,
-			time.Now().Format("2006-01-02 15:04:05"),
-			string(body),
-		}
+	mux.HandleFunc("GET /paste/{id}/view", handler.ViewPaste(store))
 
-		if len(body) == 0 {
-			http.Error(w, "Body not provided", 400)
-			return
-		}
-
-		ids[idString] = d
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(201)
-		fmt.Fprintf(w, strconv.Itoa(int(id)))
-	})
-
-	mux.HandleFunc("GET /paste", func(w http.ResponseWriter, r *http.Request) {
-		tmpl, err := template.ParseFiles("./layout.html", "./paste.html")
-		if err != nil {
-			fmt.Println(err)
-			http.Error(w, "Error parsing templtate", 500)
-			return
-		}
-
-		tmpl.ExecuteTemplate(w, "layout", ids)
-	})
-
-	mux.HandleFunc("GET /paste/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
-
-		d, exist := ids[id]
-
-		if !exist {
-			http.NotFound(w, r)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(200)
-		fmt.Fprintf(w, d.Body)
-	})
-
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
-			http.Error(w, "Page not found", http.StatusNotFound)
-			return
-		}
-
-		tmpl, err := template.ParseFiles("./layout.html", "./home.html")
-		if err != nil {
-			http.Error(w, "Error parsing template", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(200)
-
-		tmpl.ExecuteTemplate(w, "layout", "")
-
-	})
-
-	mux.HandleFunc("GET /paste/{id}/info", func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
-
-		d, exist := ids[id]
-
-		if !exist {
-			http.NotFound(w, r)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		resp := map[string]string{
-			"created":        d.CreatedAt,
-			"Content length": strconv.Itoa(len(d.Body)),
-		}
-
-		json.NewEncoder(w).Encode(resp)
-	})
-
-	mux.HandleFunc("GET /paste/{id}/view", func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
-
-		d, exist := ids[id]
-
-		if !exist {
-			http.NotFound(w, r)
-			return
-		}
-
-		tmpl, err := template.ParseFiles("./layout.html", "./paste_detail.html")
-		if err != nil {
-			http.Error(w, "Error parsing template", http.StatusInternalServerError)
-			fmt.Println(err)
-			return
-		}
-
-		fmt.Println(d)
-		tmpl.ExecuteTemplate(w, "layout", d)
-
-	})
-
-	mux.HandleFunc("POST /users", func(w http.ResponseWriter, r *http.Request) {
-		var u User
-
-		err := json.NewDecoder(r.Body).Decode(&u)
-		if err != nil {
-			http.Error(w, "Bad json provided", http.StatusBadRequest)
-			return
-		}
-
-		if u.Name == "" {
-			http.Error(w, "Name not allowed empty", http.StatusBadRequest)
-			return
-		}
-
-		if u.Email == "" {
-			http.Error(w, "Name not allowed empty", http.StatusBadRequest)
-			return
-		}
-
-		users = append(users, u)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(201)
-
-		json.NewEncoder(w).Encode(u)
-	})
+	mux.HandleFunc("POST /users", handler.CreateUser(store))
 
 	http.ListenAndServe(":8080", logger(mux))
 
