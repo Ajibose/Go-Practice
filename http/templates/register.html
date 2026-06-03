@@ -1,0 +1,14 @@
+{{define "content"}}
+<form method="POST" action="/register">
+    <label>
+        Name:
+        <input type="text" name="name" placeholder="e.g John Doe" required />
+    </label>
+    <label>
+        Email:
+        <input type="email" name="email" placeholder="johndoe@gmail.com" required />
+    </label>
+
+    <button type="submit">Create User</button>
+</form>
+{{end}}

@@ -8,13 +8,17 @@
     <link rel="stylesheet" href="./static/css/index.css">
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="#">PasteBin</a></li>
-        </ul>
-    </nav>
-    {{template "content" .}}
-
+    <header>
+        <nav>
+            <ul>
+                <li><a href="#">PasteBin</a></li>
+                <li><a href="/register">Register</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {{template "content" .}}
+    </main>
     <footer>&Copy; 2026</footer>
 </body>
 </html>

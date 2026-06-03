@@ -48,7 +48,7 @@ func CreatePaste(store *model.Storage) http.HandlerFunc {
 func GetAllPaste(store *model.Storage) http.HandlerFunc {
 	ids := store.Ids
 	return func(w http.ResponseWriter, r *http.Request) {
-		tmpl, err := template.ParseFiles("./layout.html", "./paste.html")
+		tmpl, err := template.ParseFiles("./templates/layout.html", "./templates/paste.html")
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "Error parsing templtate", 500)
@@ -112,7 +112,7 @@ func ViewPaste(store *model.Storage) http.HandlerFunc {
 			return
 		}
 
-		tmpl, err := template.ParseFiles("./layout.html", "./paste_detail.html")
+		tmpl, err := template.ParseFiles("./templates/layout.html", "./templates/paste_detail.html")
 		if err != nil {
 			http.Error(w, "Error parsing template", http.StatusInternalServerError)
 			fmt.Println(err)

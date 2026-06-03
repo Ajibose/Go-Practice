@@ -6,16 +6,19 @@ import (
 	"practice/http/model"
 )
 
-
 func CreateUser(store *model.Storage) http.HandlerFunc {
-	users := store.Users
 	return func(w http.ResponseWriter, r *http.Request) {
 		var u model.User
 
-		err := json.NewDecoder(r.Body).Decode(&u)
-		if err != nil {
-			http.Error(w, "Bad json provided", http.StatusBadRequest)
-			return
+		if r.Header.Get("Content-Type") == "application/json" {
+			err := json.NewDecoder(r.Body).Decode(&u)
+			if err != nil {
+				http.Error(w, "Bad json provided", http.StatusBadRequest)
+				return
+			}
+		} else {
+			u.Name = r.FormValue("name")
+			u.Email = r.FormValue("email")
 		}
 
 		if u.Name == "" {
@@ -28,11 +31,14 @@ func CreateUser(store *model.Storage) http.HandlerFunc {
 			return
 		}
 
-		users = append(users, u)
+		store.Users = append(store.Users, u)
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(201)
-
-		json.NewEncoder(w).Encode(u)
+		if r.Header.Get("Content-Type") == "application/json" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(201)
+			json.NewEncoder(w).Encode(u)
+			return
+		}
+		http.Redirect(w, r, "/", 303)
 	}
 }
