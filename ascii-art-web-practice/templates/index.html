@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ASCII ART WEB</title>
+    </head>
+    <body>
+        <header>
+            <h1>ASCII Art Generator</h1>
+             <p>Type some text and pick a banner style - get your ASCII art back</p>
+        </header>
+        <main>
+            <form method="POST" action="/ascii-art">
+                <label>
+                    Text: 
+                    <input type="text" name="text" placeholder="Enter text to draw">
+                </label>
+                <label>
+                    Select Banner: 
+                    <select name="banner">
+                        <option value="standard">Standard</option>
+                        <option value="shadow">Shadow</option>
+                        <option value="thinkertoy">Thinkertoy</option>
+                    </select>
+                </label>
+
+                <button type="submit">Generate</button>
+            </form>
+
+            <pre>
+                {{- if . -}}
+                    {{.}}
+                {{end}}
+            </pre>
+        </main>
+    </body>
+</html>
