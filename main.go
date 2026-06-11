@@ -1,27 +1,21 @@
 package main
 
-import (
-	"fmt"
-	"unicode"
-)
+import "fmt"
+
+type Bag map[string][]string
+
+type Person struct {
+	Name  string
+	Stuff Bag
+}
 
 func main() {
-	str := "hello World"
-	res := ""
-
-	newWord := true
-
-	for _, ch := range str {
-		if newWord {
-			res += string(unicode.ToUpper(ch))
-			newWord = false
-
-		} else {
-			newWord = true
-			res += string(unicode.ToLower(ch))
-		}
-
+	p := Person{
+		Name: "Ibrahim",
+		Stuff: Bag{
+			"books": {"Go Programming"},
+		},
 	}
 
-	fmt.Println(res)
+	fmt.Println(p.Stuff)
 }
