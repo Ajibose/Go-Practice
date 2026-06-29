@@ -21,17 +21,14 @@ func numOfSubarrays(nums []int, k, threshold int) int {
 		sum += nums[i]
 	}
 
-	avg := sum / k
-
-	if avg >= threshold {
+	if sum >= threshold*k {
 		count++
 	}
 
 	for i := k; i < len(nums); i++ {
 		sum += nums[i] - nums[i-k]
-		avg := sum / k
 
-		if avg >= threshold {
+		if sum >= threshold*k {
 			count++
 		}
 	}
